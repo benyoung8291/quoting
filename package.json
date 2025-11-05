@@ -5,12 +5,27 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init --preview-feature",
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "next": "^13.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "next-auth": "^4.24.0"
+    "next-auth": "^4.24.0",
+    "@prisma/client": "^5.9.1",
+    "prisma": "^5.9.1",
+    "@next-auth/prisma-adapter": "^1.0.5",
+    "bcryptjs": "^2.4.3",
+    "docxtemplater": "^3.37.0",
+    "pizzip": "^3.1.5",
+    "exceljs": "^4.3.0",
+    "puppeteer-core": "^21.3.3",
+    "@sparticuz/chromium": "^117.0.0"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
   }
 }

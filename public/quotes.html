@@ -82,12 +82,25 @@
     .locked #detailsBody .rte-editor{pointer-events:none;opacity:.6}
     .locked #detailStatus{pointer-events:auto;opacity:1}
     @media (max-width:960px){.app-shell{grid-template-columns:1fr}.sidebar{display:none}}
+
+    /* Responsive sidebar toggle styles */
+    .app-shell.hide-sidebar{
+      grid-template-columns:1fr !important;
+    }
+    .app-shell.hide-sidebar .sidebar{
+      display:none;
+    }
+    @media (max-width:960px){
+      #sidebarToggle{display:inline-block;}
+    }
   </style>
 </head>
 <body>
 <header>
   <h1>Premrest Detailed Quotes</h1>
   <div>
+    <!-- Sidebar toggle for small screens -->
+    <button id="sidebarToggle" class="btn secondary" style="display:none;" onclick="toggleSidebar()">☰</button>
     <button class="btn secondary" onclick="alert('Later: settings, users, Acumatica connection')">Settings</button>
     <button class="btn" onclick="newQuote()">New Quote</button>
     <button class="btn secondary" onclick="saveQuote()">Save</button>

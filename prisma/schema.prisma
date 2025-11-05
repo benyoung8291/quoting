@@ -1,0 +1,116 @@
+// Prisma schema for the extended quoting application.
+//
+// This schema defines the database models used by the
+// application.  In addition to the basic User model
+// required by NextAuth, it adds support for storing
+// quotes, line items with parent/child relationships,
+// quote templates, a versioned price book, and a
+// history table to record changes to price book
+// entries.  All primary keys are UUIDs or CUIDs so
+// that they can be generated client side if
+// necessary.  Timestamps are added to every model to
+// make it easy to audit changes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+model User {
+  id           String           @id @default(uuid())
+  name         String?
+  email        String           @unique
+  passwordHash String
+  role         Role             @default(USER)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  quotes       Quote[]          @relation("UserQuotes")
+  priceBook    PriceBookItem[]  @relation("PriceBookCreator")
+  priceHistory PriceBookHistory[] @relation("PriceBookHistoryUser")
+}
+
+model Quote {
+  id                     String     @id @default(cuid())
+  name                   String
+  client                 String?
+  status                 String?
+  probability            Float?
+  date                   DateTime?    // Quote creation or submission date
+  expiryDate             DateTime?    // Defaults to date + 30 days
+  stage                  String?
+  summary                String?
+  address                String?
+  descriptionHtml        String?
+  descriptionInitialized Boolean?  @default(false)
+  archived               Boolean    @default(false)
+  owner                  User?      @relation("UserQuotes", fields: [ownerId], references: [id])
+  ownerId                String?
+  lines                  LineItem[]
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+}
+
+model LineItem {
+  id        String     @id @default(cuid())
+  quote     Quote      @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteId   String
+  parent    LineItem?  @relation("LineItemHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  String?
+  children  LineItem[] @relation("LineItemHierarchy")
+  description String
+  qty       Int        @default(1)
+  cost      Float      @default(0)
+  markup    Float      @default(0)
+  sell      Float      @default(0)
+  margin    Float      @default(0)
+  isParent  Boolean    @default(false)
+  expanded  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model QuoteTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  template  Json?
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PriceBookItem {
+  id          String            @id @default(cuid())
+  sku         String
+  description String
+  cost        Float
+  margin      Float
+  sellPrice   Float
+  createdBy   User?             @relation("PriceBookCreator", fields: [createdById], references: [id])
+  createdById String?
+  histories   PriceBookHistory[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model PriceBookHistory {
+  id             String   @id @default(cuid())
+  priceBookItem  PriceBookItem @relation(fields: [priceBookItemId], references: [id], onDelete: Cascade)
+  priceBookItemId String
+  fieldChanged   String
+  oldValue       String?
+  newValue       String
+  changedBy      User?    @relation("PriceBookHistoryUser", fields: [changedById], references: [id])
+  changedById    String?
+  createdAt      DateTime @default(now())
+}
